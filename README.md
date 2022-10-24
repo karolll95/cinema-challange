@@ -7,6 +7,7 @@
 It can be show, cleaning slot, some private conference/training, some e-sport tournament etc.
 Each of those, are events, that are happening in a room. That's why I modeled base class RoomEvent and
 deriving from it Show, CleaningSlot and Unavailability. We can think of it as different room states.
+We can imagine as a system grows, we can have state-specific operations 
 - Movie catalog is simplified to store movies with duration and 3D glasses indicator
 - Room catalog is simple, as by cinema definition it shouldn't change a lot. There is a
 name and cleaning slot duration (defaults to some value), which can be updated. 
@@ -16,7 +17,7 @@ name and cleaning slot duration (defaults to some value), which can be updated.
 All repositories are in memory for simplicity of the solution.
 - At DB level, we'll have a table (room_events) which will store all the needed event information,
 including type, time range etc. Table will also have domain specific columns like movie_id
-or unavailability_reason, but thanks to application level modeling, it will be impossible to
+or unavailability_reason, but thanks to domain level modeling, it will be impossible to
 create an entity in invalid state (e.g. cleaning slot with movie_id)
 - I also decided to implement repository per each entity (which should only query for 
 room_events of given type) as we might need some specific actions, along with a RoomEventRepository
