@@ -1,55 +1,51 @@
-# High Way Cinema
+# Cinema Planning System
 
-Our client has a cinema in Wrocław, Poland. Currently, all movies schedule is done by Pen and Paper on big board where there is plan for given time for all movies the cinema shows. Planner Jadwiga needs to schedule seans(seans is movie schedule at given time)for best used of the space.
+## Explanation
 
-## Board overview
+#### Model
+- Each thing, that is happening in the cinema is strictly related with the room. 
+It can be show, cleaning slot, some private conference/training, some e-sport tournament etc.
+Each of those, are events, that are happening in a room. This is what was behind my thinking
+when preparing a model of base class RoomEvent and deriving from it Show, CleaningSlot and Unavailability.
+- Movie catalog is simplified to store movies with duration and 3D glasses indicator
+- Room catalog is simple, as by cinema definition it shouldn't change a lot. There is a
+name and cleaning slot duration (defaults to some value), which can be updated. 
+(I decided to not implement the update flow further than the aggregate, it could be added in the future)
 
-![Cinema - page 1 copy](https://user-images.githubusercontent.com/34231627/150541482-0b1e4a66-4298-4d3e-846f-c62ba1c8e37b.png)
+#### DB/Repository
+All repositories are in memory for simplicity of the solution.
+- At DB level, we'll have a table (room_events) which will store all the needed event information,
+including type, time range etc. Table will also have domain specific columns like movie_id
+or unavailability_reason, but thanks to application level modeling, it will be impossible to
+create an entity in invalid state (e.g. cleaning slot with movie_id)
+- I also decided to implement repository per each entity (which should only query for 
+room_events of given type) as we might need some specific actions, along with a RoomEventRepository
+which is aggregating all the results.
+- There are also simple repositories for Movie and Room aggregates.
 
+#### Command/Query
+Command/Query handlers should be the called from the API Controller levels.
+I was considering using some abstraction rather than calling specific handlers (e.g. Mediator pattern), 
+but decided to not implement it at this point.
+- To create a new roomEvent I used commands, which are calling appropriate 
+repositories and factories to persist new events. 
+- To view the cinema board plan, I used similar approach, but with query and its handler. 
+- Query handler is calling the roomEventRepository for events happening in provided days, 
+mapping it to the view model and returning
 
-## Domain requirements
+#### Validation
+I decided to implement a single validator, which can be reused in factories of all the
+roomEvent types. Depending on the needs, we can validate:
+- room availability in given time
+- event being within working hours
+- event being within premiere hours
 
-We would like to help Jadwiga to do better job with his weekly task with planning the seans. Idea is to create virtual board that she will be able to add seans to the board.
+#### Tests
+I decided to implement tests mainly on the command/query handlers level, which are checking
+various cases happening in the flow, because IMHO it's more clean and faster approach.
+Besides them, I added tests for checking the room availability, as it might be used in 
+other scopes as well and it's crucial it works correctly.
 
-User Stories:
-- Planner Jadwiga will be able to schedule Seans for given movie at particular time every day week from 8:00-22:00
-- Any 2 scheduled movies can't be on same time and same room. Even the overlapping is forbidden.
-- Every seans need to have maintenance slot to clean up whole Room. Every room have different cleaning slot.
-- Some movies can have 3d glasses required.
-- Not every movie are equal e.g. Premier need to be after working hours around 17:00-21:00
-- There is possibilities that given room may not be available for particular time slot time or even days.
-
-
-You task is to model the week planning of the seans by Jadwiga.
-
-## Assumption
-- Catalog of movies already exists(telling if it needs 3d glasses, how long the movie will take)
-
-### Challenge notes
-
-* Movie Catalog is not in scope of this challenge but some model will be required to fulfill given task
-* Consider concurrency modification. How to solve problem
-when two Jadwiga's add different movies to same time and same room.
-* If you have question to requirements simply just ask us.
-* If during the assignment you will work on real database and UI you will lose precise time, so we encourage you to not do so.
-
-#### What we care for:
-- Solid domain model
-- Quality of tests
-- Clean code
-- Proper module/context modeling
-
-#### What we don’t care for:
-- UI to be implemented
-- Using database
-- All the cases to be covered.
-
-#### What we expect from solution:
-- Treat it like production code. Develop your software in the same way that you would for any code that is intended to be deployed to production.
-- Would be good to describe decision you make so future developers won't be scratching the head about the reasoning.
-- Test should be green
-- Code should be on github repo.
-
-
-
-
+#### Other
+- We should consider the term of WorkingHours and if we should finish show before working hours, or show + cleaning slot
+For this case purpose I decided to go with all events should happen within working hours
