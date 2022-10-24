@@ -5,8 +5,8 @@
 #### Model
 - Each thing, that is happening in the cinema is strictly related with the room. 
 It can be show, cleaning slot, some private conference/training, some e-sport tournament etc.
-Each of those, are events, that are happening in a room. This is what was behind my thinking
-when preparing a model of base class RoomEvent and deriving from it Show, CleaningSlot and Unavailability.
+Each of those, are events, that are happening in a room. That's why I modeled base class RoomEvent and
+deriving from it Show, CleaningSlot and Unavailability. We can think of it as different room states.
 - Movie catalog is simplified to store movies with duration and 3D glasses indicator
 - Room catalog is simple, as by cinema definition it shouldn't change a lot. There is a
 name and cleaning slot duration (defaults to some value), which can be updated. 

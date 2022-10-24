@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.LocalDateTime.now
 import java.util.UUID
 
 internal class CreateUnavailabilityCommandTest {
@@ -31,6 +30,10 @@ internal class CreateUnavailabilityCommandTest {
         unavailabilityFactory = unavailabilityFactory
     )
 
+    companion object {
+        private val TIME_2022_10_20_9_15 = LocalDateTime.of(2022, 10, 20, 9, 15)
+    }
+
     @Test
     internal fun `can't create unavailability when room not found`() {
         //given
@@ -42,7 +45,10 @@ internal class CreateUnavailabilityCommandTest {
                 CreateUnavailabilityCommand(
                     reason = RENT,
                     roomId = roomId,
-                    timeRange = TimeRange(from = now().minusMinutes(15), to = now().minusMinutes(5))
+                    timeRange = TimeRange(
+                        from = TIME_2022_10_20_9_15,
+                        to = TIME_2022_10_20_9_15.plusMinutes(5)
+                    )
                 )
             )
         }
@@ -52,7 +58,10 @@ internal class CreateUnavailabilityCommandTest {
     internal fun `can successfully save unavailability`() {
         //given
         val room = addRoom()
-        val timeRange = TimeRange(from = now().minusMinutes(15), to = now().minusMinutes(5))
+        val timeRange = TimeRange(
+            from = TIME_2022_10_20_9_15,
+            to = TIME_2022_10_20_9_15.plusMinutes(15)
+        )
 
         //when
         handler.handle(
@@ -76,7 +85,10 @@ internal class CreateUnavailabilityCommandTest {
     internal fun `can't create unavailability when room is unavailable at that time`() {
         //given
         val room = addRoom()
-        val existingUnavailabilityTimeRange = TimeRange(now().minusMinutes(120), now().minusMinutes(60))
+        val existingUnavailabilityTimeRange = TimeRange(
+            from = TIME_2022_10_20_9_15,
+            to = TIME_2022_10_20_9_15.plusMinutes(40)
+        )
 
         roomEventRepository.save(CleaningSlot(room.id, existingUnavailabilityTimeRange))
 

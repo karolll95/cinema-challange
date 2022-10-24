@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.Duration
-import java.time.LocalDateTime.now
 import java.time.LocalDateTime.of
 import java.util.UUID
 
@@ -30,6 +29,10 @@ internal class CreateCleaningSlotCommandTest {
         cleaningSlotFactory = cleaningSlotFactory
     )
 
+    companion object {
+        private val TIME_2022_10_20_9_15 = of(2022, 10, 20, 9, 15)
+    }
+
     @Test
     internal fun `can't create cleaning slot when room not found`() {
         //given
@@ -37,7 +40,7 @@ internal class CreateCleaningSlotCommandTest {
 
         //when //then
         assertThrows<RoomNotFoundException> {
-            handler.handle(CreateCleaningSlotCommand(roomId, now()))
+            handler.handle(CreateCleaningSlotCommand(roomId, TIME_2022_10_20_9_15))
         }
     }
 
@@ -45,7 +48,7 @@ internal class CreateCleaningSlotCommandTest {
     internal fun `can successfully save cleaning slot`() {
         //given
         val room = roomRepository.save(Room(name = "1"))
-        val startingTime = now().minusHours(2)
+        val startingTime = TIME_2022_10_20_9_15
 
         //when
         handler.handle(CreateCleaningSlotCommand(room.id, startingTime))
@@ -63,13 +66,16 @@ internal class CreateCleaningSlotCommandTest {
     internal fun `can't create cleaning slot when room is unavailable at that time`() {
         //given
         val room = roomRepository.save(Room(name = "1"))
-        val existingUnavailabilityTimeRange = TimeRange(now().minusMinutes(120), now().minusMinutes(60))
+        val existingUnavailabilityTimeRange = TimeRange(
+            from = TIME_2022_10_20_9_15,
+            to = TIME_2022_10_20_9_15.plusMinutes(120)
+        )
 
         roomEventRepository.save(CleaningSlot(room.id, existingUnavailabilityTimeRange))
 
         //when //then
         assertThrows<IllegalStateException> {
-            handler.handle(CreateCleaningSlotCommand(room.id, now().minusMinutes(90)))
+            handler.handle(CreateCleaningSlotCommand(room.id, TIME_2022_10_20_9_15.plusMinutes(90)))
         }
     }
 
